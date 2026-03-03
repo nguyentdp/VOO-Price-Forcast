@@ -334,8 +334,21 @@
         <img src="assets/top_coefficients.png?v=20260303" alt="Top Coefficients" />
         <div class="cap">
           <b>Top coefficients.</b> Which signals mattered most to the model (positive pushes forecast up; negative pushes it down).
-        </div>
       </div>
+      <div class="cap">
+            <b>What are these “features”?</b> They’re simple signals computed from the raw daily data (Open/High/Low/Close/Volume).
+            The model learns a weight for each signal.
+            <ul>
+              <li><code>ret_1</code>, <code>ret_2</code>, <code>ret_5</code>, <code>ret_10</code>: recent % price changes over 1, 2, 5, 10 days (momentum).</li>
+              <li><code>ma_ratio_5</code>: today’s price compared to its 5-day average (trend).</li>
+              <li><code>vol_10</code>, <code>vol_20</code>: how “bumpy” the price has been recently (volatility).</li>
+              <li><code>range</code>: how much the price moved within the day (High − Low, scaled).</li>
+              <li><code>gap</code>: how much the day “jumped” at the open vs yesterday’s close.</li>
+              <li><code>log_vol</code>, <code>log_vol_diff</code>, <code>log_vol_ma_20</code>: trading activity (volume) and how it changes.</li>
+            </ul>
+            <span class="small">Reading the bars: larger bars = more influence; positive pushes the prediction up, negative pushes it down.</span>
+          </div>
+        </div>
 
       <div class="note">
         Tip: run <code>python src/make_plots.py</code> to regenerate plots, then copy them into <code>docs/assets/</code>.
