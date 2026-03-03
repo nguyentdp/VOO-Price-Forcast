@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VOO 5-Day Forecasting with Ridge Regression</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e7ecff;
+      --muted:#a8b3d8;
+      --accent:#7aa2ff;
+      --accent2:#7ef0c2;
+      --warn:#ffd27a;
+      --line:rgba(231,236,255,.12);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --max: 980px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 10% 0%, rgba(122,162,255,.20), transparent 60%),
+        radial-gradient(900px 600px at 90% 10%, rgba(126,240,194,.12), transparent 55%),
+        radial-gradient(700px 500px at 60% 100%, rgba(255,210,122,.10), transparent 60%),
+        var(--bg);
+      line-height:1.55;
+    }
+    a{color:var(--accent); text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 60px}
+    .nav{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:14px 16px; border:1px solid var(--line);
+      background: rgba(17,26,51,.65); backdrop-filter: blur(10px);
+      border-radius: 999px; box-shadow: var(--shadow);
+      position:sticky; top:14px; z-index:50;
+    }
+    .brand{display:flex; gap:10px; align-items:center}
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(122,162,255,.15);
+    }
+    .brand b{letter-spacing:.2px}
+    .navlinks{display:flex; gap:14px; flex-wrap:wrap; justify-content:flex-end}
+    .navlinks a{color:var(--muted); font-size:14px}
+    .navlinks a:hover{color:var(--text)}
+    header{
+      margin-top:26px;
+      padding:28px 22px;
+      border:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(17,26,51,.75), rgba(15,23,48,.70));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    h1{margin:0 0 8px; font-size:34px; line-height:1.15}
+    .sub{color:var(--muted); margin:0 0 18px; max-width: 75ch}
+    .pillrow{display:flex; gap:10px; flex-wrap:wrap}
+    .pill{
+      font-size:13px; color:var(--text);
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      padding:8px 10px; border-radius:999px;
+    }
+    .grid{display:grid; gap:14px; margin-top:16px}
+    @media (min-width: 860px){
+      .grid{grid-template-columns: 1.1fr .9fr}
+    }
+    .card{
+      border:1px solid var(--line);
+      background: rgba(17,26,51,.60);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:18px 18px;
+    }
+    h2{margin:0 0 10px; font-size:18px}
+    .kpi{
+      display:grid; gap:10px;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      margin-top:10px;
+    }
+    .kpi .box{
+      padding:12px 12px; border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .kpi .label{font-size:12px; color:var(--muted)}
+    .kpi .value{font-size:18px; font-weight:700; margin-top:2px}
+    .note{
+      margin-top:10px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,210,122,.22);
+      background: rgba(255,210,122,.08);
+      color: var(--text);
+      font-size: 14px;
+    }
+    ul{margin:10px 0 0 18px; color:var(--muted)}
+    li{margin:6px 0}
+    section{margin-top:16px}
+    .figure{
+      border-radius:16px;
+      overflow:hidden;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.12);
+    }
+    .figure img{display:block; width:100%; height:auto}
+    .cap{padding:10px 12px; color:var(--muted); font-size:13px; border-top:1px solid var(--line)}
+    .twocol{
+      display:grid; gap:14px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px){
+      .twocol{grid-template-columns: 1fr 1fr}
+    }
+    footer{
+      margin-top:22px;
+      color:var(--muted);
+      font-size:13px;
+      text-align:center;
+      opacity:.9;
+    }
+    .mini{
+      display:flex; gap:10px; flex-wrap:wrap; margin-top:10px
+    }
+    .mini .tag{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px}
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 12px; border-radius:12px;
+      border:1px solid var(--line);
+      background: rgba(122,162,255,.12);
+      color: var(--text);
+      font-weight:600;
+    }
+    .btn.secondary{background: rgba(255,255,255,.04); color: var(--muted)}
+    .btn:hover{filter:brightness(1.05); text-decoration:none}
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="nav">
+      <div class="brand">
+        <span class="dot"></span>
+        <b>Portfolio Project</b>
+      </div>
+      <div class="navlinks">
+        <a href="#overview">Overview</a>
+        <a href="#features">Feature Engineering</a>
+        <a href="#model">Model & Results</a>
+        <a href="#plots">Plots</a>
+        <a href="#repro">Reproducibility</a>
+      </div>
+    </div>
+
+    <header id="overview">
+      <h1>VOO 5-Day Forecasting with Ridge Regression</h1>
+      <p class="sub">
+        This project predicts the <b>5-trading-day ahead</b> price movement of Vanguard S&P 500 ETF (VOO)
+        using engineered technical features from historical OHLCV data. Performance is compared against a
+        simple <b>no-change baseline</b>.
+      </p>
+      <div class="pillrow">
+        <div class="pill">Topic: Linear Regression (Ridge)</div>
+        <div class="pill">Horizon: 5 trading days</div>
+        <div class="pill">Time-series split (no shuffle)</div>
+        <div class="pill">Outlier handling: winsorization + clipping</div>
+      </div>
+      <div class="btnrow">
+        <a class="btn" href="#plots">View Results Plots</a>
+        <a class="btn secondary" href="#repro">How to Reproduce</a>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Dataset</h2>
+        <div class="mini">
+          <div class="tag">Instrument: VOO</div>
+          <div class="tag">Fields: Open, High, Low, Close, Volume</div>
+          <div class="tag">Range: 2010-09-09 → 2023-10-31</div>
+        </div>
+        <ul>
+          <li><b>Target:</b> 5-day future return (converted into a future price prediction).</li>
+          <li><b>Train/Test:</b> last 252 trading days used as test (≈ 1 year).</li>
+          <li><b>Baseline:</b> predict future price equals today’s price (“no change”).</li>
+        </ul>
+        <div class="note">
+          Why 5-day horizon? Next-day price is extremely noisy; a short multi-day horizon is often more stable
+          and easier to interpret in a portfolio setting.
+        </div>
+      </section>
+
+      <section class="card" id="model">
+        <h2>Model & Key Results</h2>
+        <p class="sub" style="margin:0; max-width:none">
+          Model: <b>Ridge Regression</b> (linear regression with L2 regularization) trained on engineered features.
+        </p>
+
+        <div class="kpi">
+          <div class="box">
+            <div class="label">MAE (price)</div>
+            <div class="value">5.7764</div>
+            <div class="label">Baseline: 5.8368</div>
+          </div>
+          <div class="box">
+            <div class="label">RMSE (price)</div>
+            <div class="value">7.2712</div>
+            <div class="label">Baseline: 7.3637</div>
+          </div>
+          <div class="box">
+            <div class="label">Direction Accuracy</div>
+            <div class="value">0.579</div>
+            <div class="label">Baseline: 0.449</div>
+          </div>
+          <div class="box">
+            <div class="label">Test Window</div>
+            <div class="value">252 days</div>
+            <div class="label">2022-10-31 → 2023-10-31</div>
+          </div>
+        </div>
+
+        <div class="note">
+          Summary: Ridge achieved <b>lower error than baseline</b> and improved <b>direction accuracy</b>,
+          meaning it better identified whether the price moved up or down over the horizon.
+        </div>
+      </section>
+    </div>
+
+    <section class="card" id="features">
+      <h2>Feature Engineering</h2>
+      <p class="sub" style="margin:0; max-width:none">
+        Instead of using raw price “as-is”, the dataset is transformed into signals that represent trend, momentum,
+        volatility, and volume behavior.
+      </p>
+      <ul>
+        <li><b>Momentum / returns:</b> ret_1, ret_2, ret_5, ret_10</li>
+        <li><b>Trend:</b> ma_ratio_5 (price relative to 5-day moving average)</li>
+        <li><b>Volatility:</b> vol_10 and vol_20 (rolling std of daily returns)</li>
+        <li><b>Market behavior:</b> daily range (High-Low scaled by price) and gap (Open vs prior close)</li>
+        <li><b>Volume signal:</b> log_vol, log_vol_diff, log_vol_ma_20</li>
+        <li><b>Outliers:</b> winsorization on spiky features; clipping after scaling</li>
+        <li><b>Validation:</b> time-based split to avoid look-ahead bias</li>
+      </ul>
+    </section>
+
+    <section class="card" id="plots">
+      <h2>Results Plots</h2>
+
+      <div class="twocol">
+        <div class="figure">
+          <img src="assets/actual_vs_pred.png" alt="Actual vs Predicted" />
+          <div class="cap">Actual vs predicted 5-day ahead VOO price (test period).</div>
+        </div>
+
+        <div class="figure">
+          <img src="assets/residuals.png" alt="Residuals" />
+          <div class="cap">Residuals over time (Actual − Predicted). Shows when the model under/over-predicts.</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px" class="figure">
+        <img src="assets/top_coefficients.png" alt="Top Coefficients" />
+        <div class="cap">Top Ridge coefficients (signed). Highlights which engineered features contributed most.</div>
+      </div>
+    </section>
+
+    <section class="card" id="repro">
+      <h2>How to Reproduce</h2>
+      <ul>
+        <li>Place your CSV at: <code>data/VOO Stock Data.csv</code></li>
+        <li>Run training: <code>python src/train.py</code></li>
+        <li>Generate plots: <code>python src/make_plots.py</code> (saves PNGs to <code>reports/figures/</code>)</li>
+        <li>Copy plots to site assets:
+          <code>mkdir -p docs/assets &amp;&amp; cp reports/figures/*.png docs/assets/</code>
+        </li>
+      </ul>
+
+      <div class="note">
+        Note: Many Kaggle datasets shouldn’t be redistributed in public repos. A clean approach is to keep the CSV
+        out of GitHub and provide download instructions in your README.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Limitations & Next Steps</h2>
+      <ul>
+        <li>Financial time series are noisy; improvements over baseline are typically modest.</li>
+        <li>This model uses only technical OHLCV features (no macro/news signals).</li>
+        <li><b>Next steps:</b> walk-forward validation, “up/down” classification, compare with tree models.</li>
+      </ul>
+    </section>
+
+    <footer>
+      Built with Python (pandas, scikit-learn) + Matplotlib • Ridge Regression Portfolio Project
+    </footer>
+  </div>
+</body>
+</html>
