@@ -1,0 +1,26 @@
+# --- Python / venv ---
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- OS / editor ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- Jupyter (if you ever use it) ---
+.ipynb_checkpoints/
+
+# --- Data (keep Kaggle CSVs out of repo) ---
+data/*.csv
+data/*.zip
+
+# --- Local build artifacts ---
+*.log
+reports/tmp/

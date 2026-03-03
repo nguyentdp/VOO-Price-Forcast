@@ -57,7 +57,7 @@ Many Kaggle datasets shouldn’t be redistributed publicly. Prefer keeping the C
 
 ```bash
 cd docs
-python -m http.server 8000
+python -m http.server 8000 --directory docs
 ```
 
 ## Then open:
