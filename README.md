@@ -1,20 +1,40 @@
-# VOO Price Forecast (5-Day) — Ridge Regression
+# VOO Price Forecast (5-Day) — Linear Regression
 
-Portfolio project predicting the **5-trading-day ahead** price movement of **VOO (Vanguard S&P 500 ETF)** using engineered OHLCV features and a **Ridge Regression** model, compared against a **no-change baseline**.
+Portfolio project that predicts the **5-trading-day ahead** price movement of **VOO (Vanguard S&P 500 ETF)** using engineered OHLCV features and **Linear Regression**, compared against a simple **no-change baseline**.
 
-## Live Demo (GitHub Pages)
-After enabling Pages from `/docs`, your site will be:
-`https://nguyentdp.github.io/VOO-Price-Forcast/`
+> Educational project only — not financial advice.
 
-## Highlights
-- **Model:** Ridge Regression (L2 regularization)
-- **Horizon:** 5 trading days ahead
-- **Split:** time-based (no shuffle), last **252 trading days** as test
-- **Feature engineering:** returns, moving average ratio, volatility, range/gap, log-volume
-- **Plots:** actual vs predicted, residuals, top coefficients (Matplotlib)
+## Live Portfolio Page (GitHub Pages)
+If Pages is enabled from `/docs`, your site URL will look like:
+- `https://nguyentdp.github.io/VOO-Price-Forcast/`
 
-## How to Run
-### Setup
+(You can also copy the exact URL shown in **Settings → Pages**.)
+
+---
+
+## What this project shows
+- A complete supervised learning workflow (end-to-end)
+- Feature engineering (not using raw data “as-is”)
+- A fair time-based train/test split (no shuffling)
+- Baseline comparison (so results are meaningful)
+- Clear Matplotlib plots for a portfolio page
+
+---
+
+## Data (OHLCV)
+The dataset is historical daily trading data:
+
+- **Open**: price at the start of the day  
+- **High**: highest price that day  
+- **Low**: lowest price that day  
+- **Close**: price at the end of the day  
+- **Volume**: how much was traded that day  
+
+---
+
+## Reproduce
+
+### 1) Environment
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate

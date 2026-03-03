@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
@@ -11,7 +11,6 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error
 # --------- knobs you can change ----------
 HORIZON_DAYS = 5
 TEST_DAYS = 252
-RIDGE_ALPHA = 1000.0
 CLIP_Z = 20.0
 # ----------------------------------------
 
@@ -122,6 +121,7 @@ def main():
         raise ValueError(f"Not enough rows: {n}")
 
     n_test = min(TEST_DAYS, max(60, n // 5))
+
     X_train = X.iloc[:-n_test].to_numpy(dtype=np.float64)
     y_train = y.iloc[:-n_test].to_numpy(dtype=np.float64)
 
@@ -141,15 +141,14 @@ def main():
 
     model = Pipeline([
         ("impute", SimpleImputer(strategy="median")),
-        ("vt", VarianceThreshold(threshold=1e-6)),   # <-- more aggressive than 1e-12
+        ("vt", VarianceThreshold(threshold=1e-6)),
         ("scale", StandardScaler()),
         ("clip", clipper),
-        ("ridge", Ridge(alpha=RIDGE_ALPHA, solver="lsqr")),
+        ("linreg", LinearRegression()),
     ])
 
     model.fit(X_train, y_train)
 
-    # Clean output: silence only numeric overflow/divide warnings during predict
     with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
         y_pred_ret = model.predict(X_test)
 
@@ -174,7 +173,7 @@ def main():
     dir_acc = ((y_pred_valid > 0) == (y_test_valid > 0)).mean()
     base_dir = ((False) == (y_test_valid > 0)).mean()
 
-    print("\nRidge model:")
+    print("\nLinear Regression model:")
     print(f"  Price MAE:  {mae:.4f}")
     print(f"  Price RMSE: {rmse:.4f}")
     print(f"  Dir Acc:    {dir_acc:.3f}")

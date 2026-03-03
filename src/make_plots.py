@@ -3,17 +3,15 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import LinearRegression
 from sklearn.pipeline import Pipeline
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.preprocessing import StandardScaler, FunctionTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-# Must match your train.py settings
 HORIZON_DAYS = 5
 TEST_DAYS = 252
-RIDGE_ALPHA = 1000.0
 CLIP_Z = 20.0
 
 
@@ -86,7 +84,6 @@ def ensure_dir(path: str) -> None:
 
 
 def main():
-    # --- load ---
     df = pd.read_csv("data/VOO Stock Data.csv")
     df.columns = df.columns.str.strip()
 
@@ -134,7 +131,7 @@ def main():
         ("vt", VarianceThreshold(threshold=1e-6)),
         ("scale", StandardScaler()),
         ("clip", clipper),
-        ("ridge", Ridge(alpha=RIDGE_ALPHA, solver="lsqr")),
+        ("linreg", LinearRegression()),
     ])
 
     model.fit(X_train, y_train)
@@ -161,16 +158,14 @@ def main():
     base_rmse = mean_squared_error(y_true_price, baseline_price) ** 0.5
     base_dir = ((False) == (y_true_ret > 0)).mean()
 
-    print("Ridge vs Baseline (for plots):")
+    print("Linear Regression vs Baseline (for plots):")
     print(f"  MAE  {mae:.4f} vs {base_mae:.4f}")
     print(f"  RMSE {rmse:.4f} vs {base_rmse:.4f}")
     print(f"  Dir  {dir_acc:.3f} vs {base_dir:.3f}")
 
-    # --- save figures ---
     outdir = "reports/figures"
     ensure_dir(outdir)
 
-    # 1) Actual vs Predicted (future price)
     plt.figure()
     plt.plot(dates, y_true_price, label="Actual")
     plt.plot(dates, y_pred_price, label="Predicted")
@@ -182,7 +177,6 @@ def main():
     plt.savefig(os.path.join(outdir, "actual_vs_pred.png"), dpi=200)
     plt.close()
 
-    # 2) Residuals over time
     residuals = y_true_price - y_pred_price
     plt.figure()
     plt.plot(dates, residuals)
@@ -193,13 +187,11 @@ def main():
     plt.savefig(os.path.join(outdir, "residuals.png"), dpi=200)
     plt.close()
 
-    # 3) Top coefficients (absolute value)
+    linreg = model.named_steps["linreg"]
     vt = model.named_steps["vt"]
-    ridge = model.named_steps["ridge"]
     support = vt.get_support()
-
     kept_features = [f for f, keep in zip(feature_cols, support) if keep]
-    coefs = ridge.coef_
+    coefs = linreg.coef_
 
     k = min(10, len(coefs))
     top_idx = np.argsort(np.abs(coefs))[::-1][:k]
@@ -208,7 +200,7 @@ def main():
 
     plt.figure()
     plt.bar(top_feats, top_coefs)
-    plt.title("Top Ridge Coefficients (Signed)")
+    plt.title("Top Linear Regression Coefficients (Signed)")
     plt.xlabel("Feature")
     plt.ylabel("Coefficient")
     plt.xticks(rotation=45, ha="right")

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>VOO 5-Day Forecasting (Ridge Regression)</title>
+  <title>VOO 5-Day Forecasting (Linear Regression)</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -61,7 +61,7 @@
       box-shadow: var(--shadow);
     }
     h1{margin:0 0 8px; font-size:34px; line-height:1.15}
-    .sub{color:var(--muted); margin:0 0 18px; max-width: 80ch}
+    .sub{color:var(--muted); margin:0 0 18px; max-width: 90ch}
     .pillrow{display:flex; gap:10px; flex-wrap:wrap}
     .pill{
       font-size:13px; color:var(--text);
@@ -191,10 +191,10 @@
     </div>
 
     <header id="overview">
-      <h1>VOO 5-Day Forecasting with Ridge Regression</h1>
+      <h1>VOO 5-Day Forecasting with Linear Regression</h1>
       <p class="sub">
-        This project predicts the VOO ETF price <b>5-trading-day ahead</b> (5 trading days).
-        I use past daily trading data and simple patterns (trend, momentum, volatility) to train a machine learning model.
+        This project predicts the VOO ETF price of <b>5-trading-day ahead</b>.
+        I use past daily trading data and simple patterns (trend, momentum, volatility) to train a <b>Linear Regression</b> model.
         The goal is to demonstrate a clean ML workflow, <b>not</b> to provide investing advice.
       </p>
 
@@ -203,10 +203,10 @@
       </div>
 
       <div class="pillrow" style="margin-top:12px">
-        <div class="pill">Model: Ridge Regression (Linear)</div>
+        <div class="pill">Topic: Linear Regression</div>
         <div class="pill">Horizon: 5 trading days</div>
         <div class="pill">Time-based train/test split</div>
-        <div class="pill">Outliers: winsorization + clipping</div>
+        <div class="pill">Outliers handled (winsorization + clipping)</div>
       </div>
 
       <div class="btnrow">
@@ -224,8 +224,8 @@
 
         <div class="mini">
           <div class="tag">Instrument: VOO (S&P 500 index fund)</div>
-          <div class="tag">Range: 2010-09-09 → 2023-10-31</div>
-          <div class="tag">Test window: 2022-10-31 → 2023-10-31</div>
+          <div class="tag">Fields: Open, High, Low, Close, Volume</div>
+          <div class="tag">Daily data from Kaggle</div>
         </div>
 
         <h3>What “OHLCV” means</h3>
@@ -244,45 +244,46 @@
       </section>
 
       <section class="card" id="results">
-        <h2>Model & Key Results</h2>
+        <h2>Model & Results</h2>
         <p class="sub" style="margin:0; max-width:none">
-          Model: <b>Ridge Regression</b> (linear regression + a penalty that improves stability when features overlap).
+          Model: <b>Linear Regression</b> (a simple model that learns a weighted combination of features).
         </p>
 
         <div class="hr"></div>
 
-        <h3>Baseline (important)</h3>
+        <h3>Baseline (why it matters)</h3>
         <p class="sub" style="margin:0; max-width:none">
-          To check if the model adds value, I compare it to a simple baseline:
-          <b>“no-change baseline”</b> = assume the future price equals today’s price.
+          To tell whether the model is actually useful, I compare it to a simple reference point called the <b>no-change baseline</b>.
+          This baseline assumes the future price will be exactly the same as today’s price (i.e., 0% return).
+          If the model can’t beat this, it isn’t adding meaningful predictive value.
         </p>
 
         <div class="kpi">
           <div class="box">
             <div class="label">MAE (avg $ error)</div>
-            <div class="value">5.7764</div>
+            <div class="value">5.7987</div>
             <div class="label">Baseline: 5.8368</div>
           </div>
           <div class="box">
             <div class="label">RMSE ($ error, big mistakes hurt more)</div>
-            <div class="value">7.2712</div>
+            <div class="value">7.3035</div>
             <div class="label">Baseline: 7.3637</div>
           </div>
           <div class="box">
             <div class="label">Direction Accuracy (up vs down)</div>
-            <div class="value">0.579</div>
+            <div class="value">0.547</div>
             <div class="label">Baseline: 0.449</div>
           </div>
           <div class="box">
-            <div class="label">Test size</div>
+            <div class="label">Test window</div>
             <div class="value">252 days</div>
-            <div class="label">≈ 1 year</div>
+            <div class="label">Time-based (no shuffle)</div>
           </div>
         </div>
 
         <div class="note">
-          <b>Summary:</b> The Ridge model slightly reduces error vs baseline and improves “up vs down” accuracy.
-          Financial data is noisy, so improvements are usually modest — the real value here is the reproducible ML workflow.
+          Financial data is noisy, so improvements are usually modest. The main value of this project is a clear,
+          reproducible ML process: feature engineering → fair split → baseline comparison → evaluation + plots.
         </div>
       </section>
     </div>
@@ -301,12 +302,12 @@
         <li><b>Daily behavior:</b> the day’s range (high−low) and the overnight gap (open vs prior close)</li>
         <li><b>Trading activity:</b> log(volume), volume changes, and a 20-day volume average</li>
         <li><b>Outliers:</b> winsorization + clipping so extreme days don’t dominate the model</li>
-        <li><b>Fair evaluation:</b> time-based split to avoid look-ahead bias (no random shuffle)</li>
+        <li><b>Fair evaluation:</b> time-based split to avoid look-ahead bias</li>
       </ul>
 
       <div class="callout">
-        <b>Why Ridge?</b> Many signals overlap (example: moving averages and returns). Ridge adds stability by discouraging
-        extreme coefficients.
+        <b>Why Linear Regression?</b> It’s a strong baseline model for supervised learning and is easy to explain:
+        the forecast is a weighted combination of signals.
       </div>
     </section>
 
@@ -335,10 +336,14 @@
           <b>Top coefficients.</b> Which signals mattered most to the model (positive pushes forecast up; negative pushes it down).
         </div>
       </div>
+
+      <div class="note">
+        Tip: run <code>python src/make_plots.py</code> to regenerate plots, then copy them into <code>docs/assets/</code>.
+      </div>
     </section>
 
     <section class="card" id="repro">
-      <h2>How to Reproduce (2 minutes)</h2>
+      <h2>How to Reproduce</h2>
       <p class="sub" style="margin:0; max-width:none">
         These commands run the model and regenerate the plots (Matplotlib).
       </p>
@@ -365,17 +370,8 @@
       <p class="small">Then open: <code>http://localhost:8000/</code></p>
     </section>
 
-    <section class="card" id="next">
-      <h2>Limitations & Next Steps</h2>
-      <ul>
-        <li><b>Noisy problem:</b> short-horizon prices are hard to predict, so improvements are usually small.</li>
-        <li><b>Inputs:</b> this project uses only OHLCV signals (no news, macro indicators, or fundamentals).</li>
-        <li><b>Next steps:</b> walk-forward validation, “up/down” classification, compare against tree models.</li>
-      </ul>
-    </section>
-
     <footer>
-      Built with Python (pandas, scikit-learn) + Matplotlib • Ridge Regression Portfolio Project
+      Built with Python (pandas, scikit-learn) + Matplotlib • Linear Regression Portfolio Project
     </footer>
   </div>
 </body>
