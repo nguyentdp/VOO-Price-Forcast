@@ -20,3 +20,47 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -U pip
 python -m pip install -r requirements.txt
+```
+
+## Data
+Place the CSV here:
+```bash
+data/VOO Stock Data.csv
+```
+
+## Train + Evaluate
+```bash
+python src/train.py
+```
+
+## Make Plots (Matplotlib)
+```bash
+python src/make_plots.py
+```
+
+## Outputs:
+```bash
+reports/figures/*.png
+```
+
+## Copy plots into the website assets
+```bash
+mkdir -p docs/assets
+cp reports/figures/*.png docs/assets/
+```
+
+## Note on datasets
+
+Many Kaggle datasets shouldn’t be redistributed publicly. Prefer keeping the CSV out of GitHub and providing download instructions.
+
+## Quick local preview (before you rely on Pages)
+
+```bash
+cd docs
+python -m http.server 8000
+```
+
+## Then open:
+```bash
+http://localhost:8000
+```
