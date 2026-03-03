@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>VOO 5-Day Forecasting with Ridge Regression</title>
+  <title>VOO 5-Day Forecasting (Ridge Regression)</title>
   <style>
     :root{
       --bg:#0b1020;
@@ -33,6 +33,7 @@
     }
     a{color:var(--accent); text-decoration:none}
     a:hover{text-decoration:underline}
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
     .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 60px}
     .nav{
       display:flex; align-items:center; justify-content:space-between;
@@ -60,7 +61,7 @@
       box-shadow: var(--shadow);
     }
     h1{margin:0 0 8px; font-size:34px; line-height:1.15}
-    .sub{color:var(--muted); margin:0 0 18px; max-width: 75ch}
+    .sub{color:var(--muted); margin:0 0 18px; max-width: 80ch}
     .pillrow{display:flex; gap:10px; flex-wrap:wrap}
     .pill{
       font-size:13px; color:var(--text);
@@ -80,6 +81,7 @@
       padding:18px 18px;
     }
     h2{margin:0 0 10px; font-size:18px}
+    h3{margin:14px 0 8px; font-size:15px; color:var(--text)}
     .kpi{
       display:grid; gap:10px;
       grid-template-columns: repeat(2, minmax(0,1fr));
@@ -148,6 +150,26 @@
     }
     .btn.secondary{background: rgba(255,255,255,.04); color: var(--muted)}
     .btn:hover{filter:brightness(1.05); text-decoration:none}
+    .callout{
+      margin-top:14px;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid rgba(122,162,255,.25);
+      background: rgba(122,162,255,.08);
+      color: var(--text);
+      font-size: 14px;
+    }
+    .small{font-size:13px; color:var(--muted)}
+    .hr{height:1px; background:var(--line); margin:14px 0}
+    .cmd{
+      margin:10px 0 0;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background: rgba(0,0,0,.14);
+      color: var(--text);
+      overflow:auto;
+    }
   </style>
 </head>
 
@@ -156,152 +178,199 @@
     <div class="nav">
       <div class="brand">
         <span class="dot"></span>
-        <b>Portfolio Project</b>
+        <b>ML Portfolio Project</b>
       </div>
       <div class="navlinks">
         <a href="#overview">Overview</a>
+        <a href="#data">Data</a>
         <a href="#features">Feature Engineering</a>
-        <a href="#model">Model & Results</a>
+        <a href="#results">Results</a>
         <a href="#plots">Plots</a>
-        <a href="#repro">Reproducibility</a>
+        <a href="#repro">Reproduce</a>
       </div>
     </div>
 
     <header id="overview">
       <h1>VOO 5-Day Forecasting with Ridge Regression</h1>
       <p class="sub">
-        This project predicts the <b>5-trading-day ahead</b> price movement of Vanguard S&P 500 ETF (VOO)
-        using engineered technical features from historical OHLCV data. Performance is compared against a
-        simple <b>no-change baseline</b>.
+        This project predicts the VOO ETF price <b>about one week later</b> (5 trading days).
+        I use past daily trading data and simple patterns (trend, momentum, volatility) to train a machine learning model.
+        The goal is to demonstrate a clean ML workflow — <b>not</b> to provide investing advice.
       </p>
-      <div class="pillrow">
-        <div class="pill">Topic: Linear Regression (Ridge)</div>
-        <div class="pill">Horizon: 5 trading days</div>
-        <div class="pill">Time-series split (no shuffle)</div>
-        <div class="pill">Outlier handling: winsorization + clipping</div>
+
+      <div class="callout">
+        <b>Educational project only.</b> Not financial advice.
       </div>
+
+      <div class="pillrow" style="margin-top:12px">
+        <div class="pill">Model: Ridge Regression (Linear)</div>
+        <div class="pill">Horizon: 5 trading days</div>
+        <div class="pill">Time-based train/test split</div>
+        <div class="pill">Outliers: winsorization + clipping</div>
+      </div>
+
       <div class="btnrow">
-        <a class="btn" href="#plots">View Results Plots</a>
-        <a class="btn secondary" href="#repro">How to Reproduce</a>
+        <a class="btn" href="#plots">See the Plots</a>
+        <a class="btn secondary" href="#repro">Run It Yourself</a>
       </div>
     </header>
 
     <div class="grid">
-      <section class="card">
-        <h2>Dataset</h2>
+      <section class="card" id="data">
+        <h2>Data (beginner-friendly)</h2>
+        <p class="sub" style="margin:0; max-width:none">
+          The dataset is <b>historical daily trading data</b>. Each row is one trading day.
+        </p>
+
         <div class="mini">
-          <div class="tag">Instrument: VOO</div>
-          <div class="tag">Fields: Open, High, Low, Close, Volume</div>
+          <div class="tag">Instrument: VOO (S&P 500 index fund)</div>
           <div class="tag">Range: 2010-09-09 → 2023-10-31</div>
+          <div class="tag">Test window: 2022-10-31 → 2023-10-31</div>
         </div>
+
+        <h3>What “OHLCV” means</h3>
         <ul>
-          <li><b>Target:</b> 5-day future return (converted into a future price prediction).</li>
-          <li><b>Train/Test:</b> last 252 trading days used as test (≈ 1 year).</li>
-          <li><b>Baseline:</b> predict future price equals today’s price (“no change”).</li>
+          <li><b>Open</b>: price at the start of the day</li>
+          <li><b>High</b>: highest price that day</li>
+          <li><b>Low</b>: lowest price that day</li>
+          <li><b>Close</b>: price at the end of the day</li>
+          <li><b>Volume</b>: how much was traded that day</li>
         </ul>
+
         <div class="note">
-          Why 5-day horizon? Next-day price is extremely noisy; a short multi-day horizon is often more stable
-          and easier to interpret in a portfolio setting.
+          <b>Why a 5-day horizon?</b> Next-day movement is extremely noisy. Predicting a short multi-day window
+          can be slightly more stable and easier to interpret in a portfolio setting.
         </div>
       </section>
 
-      <section class="card" id="model">
+      <section class="card" id="results">
         <h2>Model & Key Results</h2>
         <p class="sub" style="margin:0; max-width:none">
-          Model: <b>Ridge Regression</b> (linear regression with L2 regularization) trained on engineered features.
+          Model: <b>Ridge Regression</b> (linear regression + a penalty that improves stability when features overlap).
+        </p>
+
+        <div class="hr"></div>
+
+        <h3>Baseline (important)</h3>
+        <p class="sub" style="margin:0; max-width:none">
+          To check if the model adds value, I compare it to a simple baseline:
+          <b>“no-change baseline”</b> = assume the future price equals today’s price.
         </p>
 
         <div class="kpi">
           <div class="box">
-            <div class="label">MAE (price)</div>
+            <div class="label">MAE (avg $ error)</div>
             <div class="value">5.7764</div>
             <div class="label">Baseline: 5.8368</div>
           </div>
           <div class="box">
-            <div class="label">RMSE (price)</div>
+            <div class="label">RMSE ($ error, big mistakes hurt more)</div>
             <div class="value">7.2712</div>
             <div class="label">Baseline: 7.3637</div>
           </div>
           <div class="box">
-            <div class="label">Direction Accuracy</div>
+            <div class="label">Direction Accuracy (up vs down)</div>
             <div class="value">0.579</div>
             <div class="label">Baseline: 0.449</div>
           </div>
           <div class="box">
-            <div class="label">Test Window</div>
+            <div class="label">Test size</div>
             <div class="value">252 days</div>
-            <div class="label">2022-10-31 → 2023-10-31</div>
+            <div class="label">≈ 1 year</div>
           </div>
         </div>
 
         <div class="note">
-          Summary: Ridge achieved <b>lower error than baseline</b> and improved <b>direction accuracy</b>,
-          meaning it better identified whether the price moved up or down over the horizon.
+          <b>Summary:</b> The Ridge model slightly reduces error vs baseline and improves “up vs down” accuracy.
+          Financial data is noisy, so improvements are usually modest — the real value here is the reproducible ML workflow.
         </div>
       </section>
     </div>
 
     <section class="card" id="features">
-      <h2>Feature Engineering</h2>
+      <h2>Feature Engineering (plain language)</h2>
       <p class="sub" style="margin:0; max-width:none">
-        Instead of using raw price “as-is”, the dataset is transformed into signals that represent trend, momentum,
-        volatility, and volume behavior.
+        Instead of feeding raw prices directly into the model, I convert the data into <b>signals</b> that represent
+        trend, momentum, volatility, and trading activity.
       </p>
+
       <ul>
-        <li><b>Momentum / returns:</b> ret_1, ret_2, ret_5, ret_10</li>
-        <li><b>Trend:</b> ma_ratio_5 (price relative to 5-day moving average)</li>
-        <li><b>Volatility:</b> vol_10 and vol_20 (rolling std of daily returns)</li>
-        <li><b>Market behavior:</b> daily range (High-Low scaled by price) and gap (Open vs prior close)</li>
-        <li><b>Volume signal:</b> log_vol, log_vol_diff, log_vol_ma_20</li>
-        <li><b>Outliers:</b> winsorization on spiky features; clipping after scaling</li>
-        <li><b>Validation:</b> time-based split to avoid look-ahead bias</li>
+        <li><b>Recent movement (momentum):</b> price changes over the last 1, 2, 5, 10 days</li>
+        <li><b>Trend:</b> whether today’s price is above/below a short moving average (MA ratio)</li>
+        <li><b>Volatility:</b> how “bumpy” recent movement has been (rolling standard deviation)</li>
+        <li><b>Daily behavior:</b> the day’s range (high−low) and the overnight gap (open vs prior close)</li>
+        <li><b>Trading activity:</b> log(volume), volume changes, and a 20-day volume average</li>
+        <li><b>Outliers:</b> winsorization + clipping so extreme days don’t dominate the model</li>
+        <li><b>Fair evaluation:</b> time-based split to avoid look-ahead bias (no random shuffle)</li>
       </ul>
+
+      <div class="callout">
+        <b>Why Ridge?</b> Many signals overlap (example: moving averages and returns). Ridge adds stability by discouraging
+        extreme coefficients.
+      </div>
     </section>
 
     <section class="card" id="plots">
-      <h2>Results Plots</h2>
+      <h2>Plots</h2>
 
       <div class="twocol">
         <div class="figure">
           <img src="assets/actual_vs_pred.png" alt="Actual vs Predicted" />
-          <div class="cap">Actual vs predicted 5-day ahead VOO price (test period).</div>
+          <div class="cap">
+            <b>Actual vs Predicted.</b> The model’s predicted future price compared with the real future price.
+          </div>
         </div>
 
         <div class="figure">
           <img src="assets/residuals.png" alt="Residuals" />
-          <div class="cap">Residuals over time (Actual − Predicted). Shows when the model under/over-predicts.</div>
+          <div class="cap">
+            <b>Residuals (Actual − Predicted).</b> Above zero = predicted too low. Below zero = predicted too high.
+          </div>
         </div>
       </div>
 
       <div style="margin-top:14px" class="figure">
         <img src="assets/top_coefficients.png" alt="Top Coefficients" />
-        <div class="cap">Top Ridge coefficients (signed). Highlights which engineered features contributed most.</div>
+        <div class="cap">
+          <b>Top coefficients.</b> Which signals mattered most to the model (positive pushes forecast up; negative pushes it down).
+        </div>
       </div>
     </section>
 
     <section class="card" id="repro">
-      <h2>How to Reproduce</h2>
-      <ul>
-        <li>Place your CSV at: <code>data/VOO Stock Data.csv</code></li>
-        <li>Run training: <code>python src/train.py</code></li>
-        <li>Generate plots: <code>python src/make_plots.py</code> (saves PNGs to <code>reports/figures/</code>)</li>
-        <li>Copy plots to site assets:
-          <code>mkdir -p docs/assets &amp;&amp; cp reports/figures/*.png docs/assets/</code>
-        </li>
-      </ul>
+      <h2>How to Reproduce (2 minutes)</h2>
+      <p class="sub" style="margin:0; max-width:none">
+        These commands run the model and regenerate the plots (Matplotlib).
+      </p>
+
+      <h3>1) Put the CSV here</h3>
+      <div class="cmd"><code>data/VOO Stock Data.csv</code></div>
+
+      <h3>2) Train + evaluate</h3>
+      <div class="cmd"><code>python src/train.py</code></div>
+
+      <h3>3) Make plots (Matplotlib)</h3>
+      <div class="cmd"><code>python src/make_plots.py</code></div>
+
+      <h3>4) Copy plots into the website folder</h3>
+      <div class="cmd"><code>mkdir -p docs/assets<br/>cp reports/figures/*.png docs/assets/</code></div>
 
       <div class="note">
-        Note: Many Kaggle datasets shouldn’t be redistributed in public repos. A clean approach is to keep the CSV
-        out of GitHub and provide download instructions in your README.
+        <b>Note on datasets:</b> Many Kaggle datasets should not be redistributed publicly.
+        A clean approach is to keep the CSV out of GitHub and provide download instructions.
       </div>
+
+      <h3>Local preview</h3>
+      <div class="cmd"><code>python -m http.server 8000 --directory docs</code></div>
+      <p class="small">Then open: <code>http://localhost:8000/</code></p>
     </section>
 
-    <section class="card">
+    <section class="card" id="next">
       <h2>Limitations & Next Steps</h2>
       <ul>
-        <li>Financial time series are noisy; improvements over baseline are typically modest.</li>
-        <li>This model uses only technical OHLCV features (no macro/news signals).</li>
-        <li><b>Next steps:</b> walk-forward validation, “up/down” classification, compare with tree models.</li>
+        <li><b>Noisy problem:</b> short-horizon prices are hard to predict, so improvements are usually small.</li>
+        <li><b>Inputs:</b> this project uses only OHLCV signals (no news, macro indicators, or fundamentals).</li>
+        <li><b>Next steps:</b> walk-forward validation, “up/down” classification, compare against tree models.</li>
       </ul>
     </section>
 
